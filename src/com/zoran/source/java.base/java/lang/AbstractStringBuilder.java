@@ -223,7 +223,9 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      */
     private void ensureCapacityInternal(int minimumCapacity) {
         // overflow-conscious code
+        //获取原数组的长度
         int oldCapacity = value.length >> coder;
+        //如果需要的最小长度比原数组长度大则进行扩容
         if (minimumCapacity - oldCapacity > 0) {
             value = Arrays.copyOf(value,
                     newCapacity(minimumCapacity) << coder);
@@ -254,6 +256,8 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
         int oldLength = value.length;
         int newLength = minCapacity << coder;
         int growth = newLength - oldLength;
+        //newLength方法内部逻辑
+        //判断append后所需的最小长度如果比之前的长度的2倍+2还大，则新数组长度为所需的最小长度，否则扩容为原数组长度的两倍+2
         int length = ArraysSupport.newLength(oldLength, growth, oldLength + (2 << coder));
         if (length == Integer.MAX_VALUE) {
             throw new OutOfMemoryError("Required length exceeds implementation limit");
@@ -576,10 +580,12 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      */
     public AbstractStringBuilder append(String str) {
         if (str == null) {
+            //如果传入的字符串为NULL 则会在原本的字符串后追加"null"
             return appendNull();
         }
         int len = str.length();
-        ensureCapacityInternal(count + len);
+        //count为字符串实际的长度
+        ensureCapacityInternal(count + len);//传入拼接后的字符串总长度
         putStringAt(count, str);
         count += len;
         return this;
