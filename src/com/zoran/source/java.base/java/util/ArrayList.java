@@ -230,12 +230,14 @@ public class ArrayList<E> extends AbstractList<E>
      */
     private Object[] grow(int minCapacity) {
         int oldCapacity = elementData.length;
+        //如果不是第一次添加元素，则扩容为原先数组长度的1.5倍又或者直接赋值为所需的最小长度
         if (oldCapacity > 0 || elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
             int newCapacity = ArraysSupport.newLength(oldCapacity,
                     minCapacity - oldCapacity, /* minimum growth */
                     oldCapacity >> 1           /* preferred growth */);
             return elementData = Arrays.copyOf(elementData, newCapacity);
         } else {
+            //如果是第一次添加元素，则将数组初始化为长度为max(10,所需长度)大小的数组
             return elementData = new Object[Math.max(DEFAULT_CAPACITY, minCapacity)];
         }
     }

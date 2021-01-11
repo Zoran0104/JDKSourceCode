@@ -638,6 +638,7 @@ public class ArraysSupport {
         // assert minGrowth > 0
 
         int newLength = Math.max(minGrowth, prefGrowth) + oldLength;
+        //此处不成立的可能情况是max(minLength，prefGrowlength)大于数组最大值
         if (newLength - MAX_ARRAY_LENGTH <= 0) {
             return newLength;
         }
@@ -645,13 +646,17 @@ public class ArraysSupport {
     }
 
     private static int hugeLength(int oldLength, int minGrowth) {
+        //数组所需的最小长度
         int minLength = oldLength + minGrowth;
+        //数组所需的最小长度比int最大值大
         if (minLength < 0) { // overflow
             throw new OutOfMemoryError("Required array length too large");
         }
+        //这个分支的存在情况是1.5倍超了数组长度最大值，但实际所需并没有超
         if (minLength <= MAX_ARRAY_LENGTH) {
             return MAX_ARRAY_LENGTH;
         }
+        //这个情况是所需的最小长度大于数组长度最大值但小于Integer最大值
         return Integer.MAX_VALUE;
     }
 }
