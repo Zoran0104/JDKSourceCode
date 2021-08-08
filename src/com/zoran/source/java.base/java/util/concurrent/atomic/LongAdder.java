@@ -83,9 +83,30 @@ public class LongAdder extends Striped64 implements Serializable {
      * @param x the value to add
      */
     public void add(long x) {
+        // cs是striped64中的cells数组属性
+        // b是striped64中的base属性
+        // v是当前线程hash到的cell中要存储的值
+        // m是cells的长度减1,hash时作为掩码使用
+        // c是当前线程hash到的cell
         Cell[] cs; long b, v; int m; Cell c;
+        // 首次首线程(cs = cells) != null)一定是false,
+        // 此时走casBase方法,以CAS的方式更新base值，且只有当CAS失败时,才会走到if中
+        // 即 想进入这个if中，需要满足以下两个条件任意一个
+        //      条件1:cells不为空,说明出现过竞争,cell[]已创建
+        //      条件2:cas操作base失败,说明其他线程先一步修改了base正在出现竞争
         if ((cs = cells) != null || !casBase(b = base, b + x)) {
+            // true无竞争 fasle表示竞争激烈,多个线程hash到同一个cell,可能要扩容
             boolean uncontended = true;
+            // 条件1:cells为空,说明正在出现竞争,外层的if是从!casBase(b = base, b + x))=true进来的
+            // 会通过调用longAccumulate(x, null, uncontended)新建一个数组,默认长度是2
+            //
+            // 条件2:默认会新建一个数组长度为2的数组,m = cs.length - 1) < 0 应该不会出现,
+            //
+            // 条件3:当前线程所在的cell为空,说明当前线程还没有更新过cell,应初始化一个cell。
+            //      a = as[getProbe() & m]) == null,如果cell为空,进行一个初始化的处理
+            //
+            // 条件4:如果是true表示更新当前线程所在的cell失败,说明现在竞争很激烈,多个线程hash到同一个Cell,应扩容
+            //    (如果是cell中通过c.cas(v = c.value, v + x)返回的结果是true，说明竞争不激烈,这个条件也就为false，也就不需要扩容操作，
             if (cs == null || (m = cs.length - 1) < 0 ||
                 (c = cs[getProbe() & m]) == null ||
                 !(uncontended = c.cas(v = c.value, v + x)))
